@@ -9,14 +9,21 @@ int main()
     int c=getc(fp);
     while(c!=EOF)
     {
-
+        int a[8]={0};
+        int i=0;
         while(c!=1 && c!=0)
         {
-            printf("%d",c%2);
+            a[i]=c%2;
             c=c/2;
+            i=i+1;
 
-        }printf("%d",c);
+        }a[i]=c;
         c=getc(fp);
+
+        for(int x=0;x<8;x++)
+        {
+            printf("%d",a[x]);
+        }
     }
 
     return 0;

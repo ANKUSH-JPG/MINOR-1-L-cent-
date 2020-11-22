@@ -393,6 +393,7 @@ void send_to_file(int binary_codes[])
         {
             if(binary_codes[i]==0 || binary_codes[i]==1)
             {
+
                 ascii=ascii+(binary_codes[i]*pow(2,count_times-1));
             }
             else
