@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<math.h>
 #define MAX 1000
+#define BINARYCODESIZE 1000000
 typedef struct node
 {
         struct node *left;
@@ -20,7 +21,7 @@ struct codes
     int sequence[MAX][8];
     int binary[8];
     char ch[MAX];
-
+    int binary_codes[BINARYCODESIZE];
 };
 
 void table_generation(char str[],int length);
@@ -35,6 +36,7 @@ int x=-1;
 //FOR codes
 struct codes c;
 int m=0;
+int b_c_v=0; //binary code variable
 
 
 void table_generation(char str[],int length)
@@ -134,20 +136,18 @@ void table_generation(char str[],int length)
     }
     display(heap[0]);
 
+    // VALUE OF BINARY_CODE TO 2
+    for(int i=0;i<BINARYCODESIZE;i++)
+    {
+        c.binary_codes[i]=2;
+    }
 
     //PRINT SEQUENCE
 
     print_sequence(str);
 
-    /*printf("---%d----\n",max_heap);
-    for(int i=0;i<n;i++)
-    {
-
-         printf("%d ",heap[i]->freq);
-    }*/
-
-
-
+    //SEND TO FILE
+    send_to_file(c.binary_codes);
 }
 
 void Insert_into_heap(char alpha,int freq)
@@ -346,8 +346,6 @@ void display(node *head)
 void print_sequence(char str[])
 {
     int p=0;
-    FILE *fp;
-    fp=fopen("compressed.txt","w");
     while(str[p]!='\0')
     {
         char character=str[p];
@@ -356,18 +354,20 @@ void print_sequence(char str[])
         {
             if(c.ch[i]==character)
             {
-                int ascii=0;
+
                 for(int j=0;j<8;j++)
                {
                     if(c.sequence[i][j]==0 || c.sequence[i][j]==1)
                     {
                         printf("%d",c.sequence[i][j]);
-                        ascii=ascii+(c.sequence[i][j]*pow(2,j));
+                        c.binary_codes[b_c_v]=c.sequence[i][j];
+                        b_c_v=b_c_v+1;
+
                     }
                     else
                         break;
-                }printf("%c \n",ascii);
-                 putc(ascii,fp);
+                }
+
 
                 break;
             }
@@ -376,7 +376,41 @@ void print_sequence(char str[])
         p=p+1;
 
     }
+
+}
+
+void send_to_file(int binary_codes[])
+{
+    int count_times=1;
+    printf("\n");
+    int ascii=0;
+    FILE *fp;
+    fp=fopen("compressed.txt","w");
+
+    for(int i=0;i<BINARYCODESIZE;i++)
+    {
+        if(count_times<=8)
+        {
+            if(binary_codes[i]==0 || binary_codes[i]==1)
+            {
+                ascii=ascii+(binary_codes[i]*pow(2,count_times-1));
+            }
+            else
+                break;
+
+        count_times=count_times+1;
+        if(count_times>8 || binary_codes[i+1]==2)
+        {
+            putc(ascii,fp);
+            count_times=1;
+            ascii=0;
+        }
+
+        }
+    }
+
     fclose(fp);
+
 }
 
 int main()
