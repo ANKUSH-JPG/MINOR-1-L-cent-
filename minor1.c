@@ -5,6 +5,9 @@
 #include<math.h>
 #include<string.h>
 #define MAX 1000
+#include <unistd.h>
+#include <arpa/inet.h>
+#define SIZE 1024
 #define BINARYCODESIZE 1000000
 
 
@@ -409,7 +412,7 @@ void send_to_file(int binary_codes[])
 
     for(int i=0;i<BINARYCODESIZE;i++)
     {
-        if(count_times<=8)
+        if(count_times<=5)
         {
             if(binary_codes[i]==0 || binary_codes[i]==1)
             {
@@ -420,9 +423,9 @@ void send_to_file(int binary_codes[])
                 break;
 
         count_times=count_times+1;
-        if(count_times>8 || binary_codes[i+1]==2)
+        if(count_times>5 || binary_codes[i+1]==2)
         {
-            putc(ascii,fp);
+            putc(ascii+60,fp);
             count_times=1;
             ascii=0;
         }
@@ -545,11 +548,54 @@ void encrypt() {
 	en[i]=-1;
 
 	printf("\nTHE ENCRYPTED MESSAGE IS\n");
+	FILE *f;
+	f=fopen("encrypted.txt","w");
 
 	for (i=0;en[i]!=-1;i++)
+    {
+        printf("%c",en[i]);
+        putc(en[i],f);
+    }
+    fclose(f);
 
-	printf("%c",en[i]);
 
+}
+
+void enc()
+{
+   long int pt,ct,key=e[0],k,len;
+
+	i=0;
+
+	len=strlen(msg);
+
+	while(i!=len) {
+
+		pt=mi[i];
+
+		pt=pt-96;
+
+		k=1;
+
+		for (j=0;j<key;j++) {
+
+			k=k*pt;
+
+			k=k%n;
+
+		}
+
+		temp[i]=k;
+
+		ct=k+96;
+
+		en[i]=ct;
+
+		i++;
+
+	}
+
+	en[i]=-1;
 }
 
 void decrypt() {
@@ -583,13 +629,48 @@ void decrypt() {
 	mi[i]=-1;
 
 	printf("\nTHE DECRYPTED MESSAGE IS\n");
-
+    FILE *f;
+	f=fopen("decrypted.txt","w");
 	for (i=0;mi[i]!=-1;i++)
     {
-        printf("%d %c \n",mi[i],mi[i]);
+        printf("%c",mi[i]);
+        putc(mi[i],f);
     }
+    fclose(f);
 
+}
 
+// socket code
+void send_file(FILE *fp, int sockfd){
+  int n;
+  char data[SIZE] = {0};
+
+  while(fgets(data, SIZE, fp) != NULL) {
+    if (send(sockfd, data, sizeof(data), 0) == -1) {
+      perror("[-]Error in sending file.");
+      exit(1);
+    }
+    bzero(data, SIZE);
+  }
+}
+
+void write_file(int sockfd){
+  int n;
+  FILE *fp;
+  char *filename = "encrypted.txt";
+  char buffer[SIZE];
+
+  fp = fopen(filename, "w");
+  while (1) {
+    n = recv(sockfd, buffer, SIZE, 0);
+    if (n <= 0){
+      break;
+      return;
+    }
+    fprintf(fp, "%s", buffer);
+    bzero(buffer, SIZE);
+  }
+  return;
 }
 
 int main()
@@ -604,10 +685,10 @@ int main()
         if(select==1)
         {
         int choice;
-        printf("STRING: \n");
+        printf("\nENTER STRING: ");
         getchar();
         char str[1000];
-            printf("Enter string:");
+
             fgets(str,1000,stdin);
             int length=0;
             while(str[length]!='\0')
@@ -618,7 +699,7 @@ int main()
 
 
         // APPLYING RSA ON THE GENERATED COMPERESSED FILE
-
+   printf("\n\n$$$$$$$$$$$ ENCRYPTING ENCODED SEQUENCE $$$$$$$$$$$$$$ ");
 
 	printf("\nENTER FIRST PRIME NUMBER\n");
 
@@ -652,7 +733,6 @@ int main()
 
 	}
 
-	printf("\nENTER MESSAGE\n");
 
      FILE *fp;int x=0;
     fp=fopen("compressed.txt","r");
@@ -660,7 +740,6 @@ int main()
     int c=getc(fp);
     while(c!=EOF)
     {
-        printf("%d ",c);
         msg[x]=c;
         c=getc(fp);
         x++;
@@ -686,12 +765,232 @@ int main()
 
 	encrypt();
 
+	// ONLY ENCRYPTION PART HAS TO BE RUN FOR THE SAFTEY
 	decrypt();
+
+	printf("\n\n*********************** PERFORMING SOCKET PROGRAMMING ***********************\n");
+    printf("YOU ARE BEHAVING LIKE A CLIENT RIGHT NOW.......");
+
+    // client code here
+
+                      char *ip = "127.0.0.1";
+                  int port;
+                  printf("ENTER PORT:");
+                  scanf("%d",&port);
+                  int e;
+
+                  int sockfd;
+                  struct sockaddr_in server_addr;
+                  FILE *fp;
+                  char *filename = "encrypted.txt";
+
+                  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+                  if(sockfd < 0) {
+                    perror("[-]Error in socket");
+                    exit(1);
+                  }
+                  printf("[+]Server socket created successfully.\n");
+
+                  server_addr.sin_family = AF_INET;
+                  server_addr.sin_port = port;
+                  server_addr.sin_addr.s_addr = inet_addr(ip);
+
+                  e = connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+                  if(e == -1) {
+                    perror("[-]Error in socket");
+                    exit(1);
+                  }
+                 printf("[+]Connected to Server.\n");
+
+                  fp = fopen(filename, "r");
+                  if (fp == NULL) {
+                    perror("[-]Error in reading file.");
+                    exit(1);
+                  }
+
+                  send_file(fp, sockfd);
+                  printf("[+]File data sent successfully.\n");
+
+                  printf("[+]Closing the connection.\n");
+                  close(sockfd);
+
 
         }
         else if(select==2)
         {
+             int choice;
+             printf("1. CLIENT \n2. SERVER");
+             scanf("%d",&choice);
 
+             if(choice==1)
+             {
+
+                 // CLIENT CODE
+                  char *ip = "127.0.0.1";
+                  int port;
+                  printf("ENTER PORT:");
+                  scanf("%d",&port);
+                  int e;
+
+                  int sockfd;
+                  struct sockaddr_in server_addr;
+                  FILE *fp;
+                  char *filename = "encrypted.txt";
+
+                  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+                  if(sockfd < 0) {
+                    perror("[-]Error in socket");
+                    exit(1);
+                  }
+                  printf("[+]Server socket created successfully.\n");
+
+                  server_addr.sin_family = AF_INET;
+                  server_addr.sin_port = port;
+                  server_addr.sin_addr.s_addr = inet_addr(ip);
+
+                  e = connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+                  if(e == -1) {
+                    perror("[-]Error in socket");
+                    exit(1);
+                  }
+                 printf("[+]Connected to Server.\n");
+
+                  fp = fopen(filename, "r");
+                  if (fp == NULL) {
+                    perror("[-]Error in reading file.");
+                    exit(1);
+                  }
+
+                  send_file(fp, sockfd);
+                  printf("[+]File data sent successfully.\n");
+
+                  printf("[+]Closing the connection.\n");
+                  close(sockfd);
+             }
+             else
+             {
+                 //SERVER CODE
+
+                  char *ip = "127.0.0.1";
+                  int port;
+                  printf("ENTER PORT:");
+                  scanf("%d",&port);
+                  int e;
+
+                  int sockfd, new_sock;
+                  struct sockaddr_in server_addr, new_addr;
+                  socklen_t addr_size;
+                  char buffer[SIZE];
+
+                  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+                  if(sockfd < 0) {
+                    perror("[-]Error in socket");
+                    exit(1);
+                  }
+                  printf("[+]Server socket created successfully.\n");
+
+                  server_addr.sin_family = AF_INET;
+                  server_addr.sin_port = port;
+                  server_addr.sin_addr.s_addr = inet_addr(ip);
+
+                  e = bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+                  if(e < 0) {
+                    perror("[-]Error in bind");
+                    exit(1);
+                  }
+                  printf("[+]Binding successfull.\n");
+
+                  if(listen(sockfd, 10) == 0){
+                 printf("[+]Listening....\n");
+                 }else{
+                 perror("[-]Error in listening");
+                    exit(1);
+                 }
+
+                  addr_size = sizeof(new_addr);
+                  new_sock = accept(sockfd, (struct sockaddr*)&new_addr, &addr_size);
+                  write_file(new_sock);
+                  printf("[+]Data written in the file successfully.\n");
+
+
+                 printf("\n\n$$$$$$$$$$$ DECRYPTING MESSAGE $$$$$$$$$$$$$$ ");
+
+                 printf("\nENTER FIRST PRIME NUMBER\n");
+
+                 scanf("%d",&p);
+
+                flag=prime(p);
+
+                if(flag==0) {
+
+                printf("\nWRONG INPUT\n");
+                exit(1);
+
+                }
+
+                printf("\nENTER ANOTHER PRIME NUMBER\n");
+
+                scanf("%d",&q);
+
+                flag=prime(q);
+
+                if(flag==0||p==q) {
+
+                printf("\nWRONG INPUT\n");
+                exit(1);
+                }FILE *fp;int x=0;
+                fp=fopen("/client/compressed.txt","r");//set location of compressed file
+
+                int c=getc(fp);
+                while(c!=EOF)
+                {
+                    msg[x]=c;
+                    c=getc(fp);
+                    x++;
+                }
+
+                for (i=0;msg[i]!=NULL;i++)
+
+                mi[i]=msg[i];
+
+                n=p*q;
+
+                t=(p-1)*(q-1);
+
+                ce();
+
+                printf("\nPOSSIBLE VALUES OF e AND d ARE\n");
+
+                for (i=0;i<j-1;i++)
+
+                printf("\n%ld\t%ld",e[i],d[i]);
+
+                enc();// code for encrypt:
+
+                decrypt();
+
+                printf("\n\n###################  DECOMPRESSING THE SEQUENCE ################ \n");
+                FILE *f;
+                f=fopen("decrypted.txt","r");
+                int chr=getc(f);
+                while(chr!=EOF)
+                {
+                    int result[5]={0},mo=0;
+                    int v=chr-60;
+                    while(v!=1)
+                    {
+                        result[mo]=v%2;
+                        v=v/2;
+                        mo=mo+1;
+                    }result[mo]=v;
+
+                    for(int f=0;f<5;f++)
+                        printf("%d",result[f]);
+                    chr=getc(f);
+                }
+
+                fclose(f);
+            }
         }
         else
         {}
