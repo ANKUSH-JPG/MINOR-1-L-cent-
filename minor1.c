@@ -1,6 +1,5 @@
 #include<stdio.h>
 #include<math.h>
-#include<conio.h>
 #include<stdlib.h>
 #include<math.h>
 #include<string.h>
@@ -711,8 +710,6 @@ int main()
 
 		printf("\nWRONG INPUT\n");
 
-		getch();
-
 		exit(1);
 
 	}
@@ -727,21 +724,19 @@ int main()
 
 		printf("\nWRONG INPUT\n");
 
-		getch();
-
 		exit(1);
 
 	}
 
 
-     FILE *fp;int x=0;
-    fp=fopen("compressed.txt","r");
+     FILE *fip;int x=0;
+    fip=fopen("compressed.txt","r");
 
-    int c=getc(fp);
+    int c=getc(fip);
     while(c!=EOF)
     {
         msg[x]=c;
-        c=getc(fp);
+        c=getc(fip);
         x++;
     }
 
@@ -777,7 +772,7 @@ int main()
                   int port;
                   printf("ENTER PORT:");
                   scanf("%d",&port);
-                  int e;
+                  int ea;
 
                   int sockfd;
                   struct sockaddr_in server_addr;
@@ -795,8 +790,8 @@ int main()
                   server_addr.sin_port = port;
                   server_addr.sin_addr.s_addr = inet_addr(ip);
 
-                  e = connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
-                  if(e == -1) {
+                  ea = connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+                  if(ea == -1) {
                     perror("[-]Error in socket");
                     exit(1);
                   }
@@ -830,7 +825,7 @@ int main()
                   int port;
                   printf("ENTER PORT:");
                   scanf("%d",&port);
-                  int e;
+                  int eb;
 
                   int sockfd;
                   struct sockaddr_in server_addr;
@@ -848,8 +843,8 @@ int main()
                   server_addr.sin_port = port;
                   server_addr.sin_addr.s_addr = inet_addr(ip);
 
-                  e = connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
-                  if(e == -1) {
+                  eb = connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+                  if(eb == -1) {
                     perror("[-]Error in socket");
                     exit(1);
                   }
