@@ -870,7 +870,7 @@ int main()
                   int port;
                   printf("ENTER PORT:");
                   scanf("%d",&port);
-                  int e;
+                  int ec;
 
                   int sockfd, new_sock;
                   struct sockaddr_in server_addr, new_addr;
@@ -888,8 +888,8 @@ int main()
                   server_addr.sin_port = port;
                   server_addr.sin_addr.s_addr = inet_addr(ip);
 
-                  e = bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
-                  if(e < 0) {
+                  ec = bind(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr));
+                  if(ec < 0) {
                     perror("[-]Error in bind");
                     exit(1);
                   }
